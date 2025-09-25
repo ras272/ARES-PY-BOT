@@ -6,4 +6,11 @@ export { sendListMessage } from './sendList'
 export { getWhatsappConfig, validateWhatsappConfig } from './getWhatsappConfig'
 
 // Re-exportar tipos
-export type { WhatsAppWebhookPayload, ParsedWebhookData, FlowResponse } from './types'
+export type {
+  WhatsAppWebhookPayload,
+  ParsedWebhookData,
+  FlowResponse,
+  WhatsAppMessage,
+  WhatsAppInteractiveMessage,
+  WhatsAppListMessage
+} from './types'
