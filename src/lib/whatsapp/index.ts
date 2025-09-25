@@ -15,5 +15,5 @@ export type {
   WhatsAppListMessage
 } from './types'
 
-// Forzar rebuild en Vercel
-console.log('WhatsApp module loaded successfully')
+// Forzar rebuild completo en Vercel - v3
+console.log('WhatsApp module loaded successfully - v3')
