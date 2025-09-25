@@ -1,4 +1,4 @@
-// Exportar todas las funciones de WhatsApp
+// Exportar todas las funciones de WhatsApp - v2
 export { parseWebhookPayload } from './parseWebhook'
 export { sendTextMessage } from './sendMessage'
 export { sendButtonMessage } from './sendButtons'
@@ -14,3 +14,6 @@ export type {
   WhatsAppInteractiveMessage,
   WhatsAppListMessage
 } from './types'
+
+// Forzar rebuild en Vercel
+console.log('WhatsApp module loaded successfully')
