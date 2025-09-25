@@ -76,3 +76,50 @@ export function extractEquipoInteres(message: string): string | null {
 
   return null
 }
+
+// Función para detectar si un mensaje es un saludo
+export function isGreeting(message: string): boolean {
+  const lower = message.toLowerCase().trim()
+
+  const greetingKeywords = [
+    'hola', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches',
+    'saludos', 'qué tal', 'que tal', 'hey', 'hi', 'hello'
+  ]
+
+  return greetingKeywords.some(keyword => lower.includes(keyword))
+}
+
+// Función para obtener saludo según la hora del día (zona horaria de Paraguay)
+export function getTimeBasedGreeting(): string {
+  try {
+    // Zona horaria de Paraguay (America/Asuncion)
+    const now = new Date()
+    const paraguayTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Asuncion"}))
+    const hour = paraguayTime.getHours()
+
+    if (hour >= 5 && hour < 12) {
+      return 'Buenos días'
+    } else if (hour >= 12 && hour < 19) {
+      return 'Buenas tardes'
+    } else {
+      return 'Buenas noches'
+    }
+  } catch (error) {
+    console.error('Error obteniendo hora:', error)
+    return 'Hola' // Fallback
+  }
+}
+
+// Función para detectar si un mensaje es una respuesta de botón interactivo
+export function getButtonReplyId(message: any): string | null {
+  try {
+    // Verificar si es un mensaje interactivo con button_reply
+    if (message?.interactive?.type === 'button_reply') {
+      return message.interactive.button_reply.id
+    }
+    return null
+  } catch (error) {
+    console.error('Error detectando respuesta de botón:', error)
+    return null
+  }
+}

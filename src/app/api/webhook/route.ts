@@ -1,9 +1,9 @@
 // app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { classifyIntent, extractEquipoInteres } from '@/lib/classifier'
+import { classifyIntent, extractEquipoInteres, isGreeting, getTimeBasedGreeting, getButtonReplyId } from '@/lib/classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '@/lib/openai'
 import { getPdfText } from '@/lib/pdf-loader'
-import { sendWhatsAppMessage } from '@/lib/whatsapp'
+import { sendWhatsAppMessage, sendWhatsAppInteractiveMessage } from '@/lib/whatsapp'
 import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 
 // Variable para controlar que el test de conexión se ejecute solo una vez
@@ -36,6 +36,108 @@ export async function POST(request: NextRequest) {
     const nombreCliente = contacto.profile?.name || 'Cliente'
 
     console.log(`Mensaje recibido de ${nombreCliente} (${telefono}): ${mensajeCliente}`)
+
+    // Verificar si es una respuesta de botón interactivo
+    const buttonReplyId = getButtonReplyId(mensaje)
+    if (buttonReplyId) {
+      console.log(`🎯 Respuesta de botón detectada: ${buttonReplyId}`)
+
+      let respuestaBoton = ''
+      switch (buttonReplyId) {
+        case 'ventas':
+          respuestaBoton = 'Perfecto, cuéntame qué producto te interesa.'
+          break
+        case 'soporte':
+          respuestaBoton = 'Por favor, indícame el modelo o número de serie de tu equipo.'
+          break
+        case 'contabilidad':
+          respuestaBoton = 'Por favor, indícame si es sobre factura, pago o estado de cuenta.'
+          break
+        default:
+          respuestaBoton = 'Opción no reconocida. ¿En qué podemos ayudarte?'
+      }
+
+      console.log('📤 Enviando respuesta de botón...')
+      const envioExitoso = await sendWhatsAppMessage(telefono, respuestaBoton)
+
+      if (!envioExitoso) {
+        console.error('❌ Error enviando respuesta de botón')
+        return NextResponse.json({ error: 'Failed to send button response' }, { status: 500 })
+      } else {
+        console.log('✅ Respuesta de botón enviada exitosamente')
+      }
+
+      // Guardar log de la interacción con botón
+      try {
+        const logData = {
+          telefono,
+          mensaje_entrada: `Botón: ${buttonReplyId}`,
+          mensaje_salida: respuestaBoton,
+          tipo_intencion: buttonReplyId
+        }
+        console.log('📋 Datos del log de botón a guardar:', logData)
+        await saveLog(logData)
+        console.log('🎉 Log de botón guardado exitosamente')
+      } catch (error) {
+        console.error('💥 Error guardando log de botón:', error)
+      }
+
+      return NextResponse.json({ status: 'success' })
+    }
+
+    // Verificar si es un saludo
+    if (isGreeting(mensajeCliente)) {
+      console.log('👋 Saludo detectado, enviando menú interactivo...')
+
+      // Obtener saludo según la hora
+      const saludo = getTimeBasedGreeting()
+      const mensajeSaludo = nombreCliente !== 'Cliente'
+        ? `${saludo} ${nombreCliente}! 👋`
+        : `${saludo}! 👋`
+
+      // Enviar saludo con menú interactivo
+      const buttons = [
+        { id: 'ventas', title: 'Ventas' },
+        { id: 'soporte', title: 'Soporte' },
+        { id: 'contabilidad', title: 'Contabilidad' }
+      ]
+
+      console.log('📤 Enviando saludo con menú interactivo...')
+      const envioExitoso = await sendWhatsAppInteractiveMessage(
+        telefono,
+        `${mensajeSaludo}\n\n¿En qué podemos ayudarte hoy?`,
+        buttons
+      )
+
+      if (!envioExitoso) {
+        console.error('❌ Error enviando menú interactivo')
+        // Fallback: enviar mensaje de texto simple
+        const fallbackMessage = `${mensajeSaludo}\n\nEscribe:\n• "ventas" para información de productos\n• "soporte" para ayuda técnica\n• "contabilidad" para consultas financieras`
+        await sendWhatsAppMessage(telefono, fallbackMessage)
+      } else {
+        console.log('✅ Menú interactivo enviado exitosamente')
+      }
+
+      // Guardar log del saludo
+      try {
+        const logData = {
+          telefono,
+          mensaje_entrada: mensajeCliente,
+          mensaje_salida: 'Menú interactivo enviado',
+          tipo_intencion: 'saludo'
+        }
+        console.log('📋 Datos del log de saludo a guardar:', logData)
+        await saveLog(logData)
+        console.log('🎉 Log de saludo guardado exitosamente')
+      } catch (error) {
+        console.error('💥 Error guardando log de saludo:', error)
+      }
+
+      return NextResponse.json({ status: 'success' })
+    }
+
+    // Si no es saludo ni botón, continuar con el flujo normal
+    console.log('🔄 Continuando con flujo normal de IA/clasificación...')
 
     // Clasificar la intención del mensaje
     const intent = classifyIntent(mensajeCliente)
