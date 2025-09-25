@@ -4,7 +4,10 @@ import { classifyIntent, extractEquipoInteres } from '@/lib/classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '@/lib/openai'
 import { getPdfText } from '@/lib/pdf-loader'
 import { sendWhatsAppMessage } from '@/lib/whatsapp'
-import { saveLead, saveLog } from '@/lib/supabase'
+import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
+
+// Variable para controlar que el test de conexión se ejecute solo una vez
+let connectionTested = false
 
 // Configuración para el webhook de WhatsApp
 export const runtime = 'nodejs'
@@ -26,6 +29,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Probar conexión a Supabase solo la primera vez
+    if (!connectionTested) {
+      connectionTested = true
+      await testSupabaseConnection()
+    }
+
     const body = await request.json()
 
     // Extraer información del mensaje
@@ -95,28 +104,32 @@ export async function POST(request: NextRequest) {
 
     // Si es ventas y detectamos interés, guardar lead
     if (intent === 'ventas' && (detectPurchaseIntent(respuestaFinal) || equipoInteres)) {
+      console.log('🎯 Detectado interés de compra, guardando lead...')
       try {
-        await saveLead({
-          nombre: nombreCliente,
+        const leadData = {
+          nombre: nombreCliente || undefined,
           telefono,
           mensaje: mensajeCliente,
-          equipo_interes: equipoInteres
-        })
-        console.log('Lead guardado exitosamente')
+          equipo_interes: equipoInteres || undefined
+        }
+        console.log('📋 Datos del lead a guardar:', leadData)
+        await saveLead(leadData)
       } catch (error) {
-        console.error('Error guardando lead:', error)
+        console.error('❌ Error guardando lead:', error)
       }
     }
 
     // Guardar log de la conversación (SIEMPRE se ejecuta)
     console.log('💾 Guardando log de conversación...')
     try {
-      const logResult = await saveLog({
+      const logData = {
         telefono,
         mensaje_entrada: mensajeCliente,
         mensaje_salida: respuestaFinal,
         tipo_intencion: intent
-      })
+      }
+      console.log('📋 Datos del log a guardar:', logData)
+      const logResult = await saveLog(logData)
       console.log('🎉 Proceso de webhook completado exitosamente')
     } catch (error) {
       console.error('💥 Error CRÍTICO guardando log:', error)

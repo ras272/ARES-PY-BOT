@@ -26,17 +26,66 @@ export async function saveLead(lead: {
   mensaje: string
   equipo_interes?: string
 }) {
+  console.log('👥 Intentando guardar lead en Supabase:', {
+    nombre: lead.nombre,
+    telefono: lead.telefono,
+    mensaje: lead.mensaje.substring(0, 50) + '...',
+    equipo_interes: lead.equipo_interes
+  })
+
   const { data, error } = await supabase
     .from('leads')
     .insert([lead])
     .select()
 
   if (error) {
-    console.error('Error saving lead:', error)
+    console.error('❌ Error saving lead:', {
+      error: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    })
     throw error
   }
 
+  if (data && data.length > 0) {
+    console.log('✅ Lead insertado en Supabase:', {
+      id: data[0].id,
+      nombre: data[0].nombre,
+      telefono: data[0].telefono,
+      created_at: data[0].created_at
+    })
+  }
+
   return data[0]
+}
+
+// Función de diagnóstico para probar la conexión
+export async function testSupabaseConnection() {
+  try {
+    console.log('🔍 Probando conexión a Supabase...')
+
+    // Intentar hacer una consulta simple
+    const { data, error } = await supabase
+      .from('logs')
+      .select('count', { count: 'exact', head: true })
+
+    if (error) {
+      console.error('❌ Error de conexión a Supabase:', {
+        error: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      return false
+    }
+
+    console.log('✅ Conexión a Supabase exitosa')
+    return true
+  } catch (error) {
+    console.error('💥 Error crítico probando conexión:', error)
+    return false
+  }
 }
 
 // Función para guardar logs
@@ -77,4 +126,32 @@ export async function saveLog(log: {
   }
 
   return data[0]
+}
+
+// Función de diagnóstico para probar la conexión
+export async function testSupabaseConnection() {
+  try {
+    console.log('🔍 Probando conexión a Supabase...')
+
+    // Intentar hacer una consulta simple
+    const { data, error } = await supabase
+      .from('logs')
+      .select('count', { count: 'exact', head: true })
+
+    if (error) {
+      console.error('❌ Error de conexión a Supabase:', {
+        error: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      return false
+    }
+
+    console.log('✅ Conexión a Supabase exitosa')
+    return true
+  } catch (error) {
+    console.error('💥 Error crítico probando conexión:', error)
+    return false
+  }
 }
