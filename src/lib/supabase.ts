@@ -11,6 +11,14 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
+// Verificar configuración inicial (solo en desarrollo)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Supabase client configurado con:', {
+    url: supabaseUrl ? '✅ Presente' : '❌ Faltante',
+    serviceKey: supabaseServiceKey ? '✅ Presente' : '❌ Faltante'
+  })
+}
+
 // Función para guardar leads
 export async function saveLead(lead: {
   nombre?: string
@@ -38,11 +46,35 @@ export async function saveLog(log: {
   mensaje_salida: string
   tipo_intencion: string
 }) {
-  const { error } = await supabase
+  console.log('🔍 Intentando guardar log en Supabase:', {
+    telefono: log.telefono,
+    mensaje_entrada: log.mensaje_entrada.substring(0, 50) + '...',
+    mensaje_salida: log.mensaje_salida.substring(0, 50) + '...',
+    tipo_intencion: log.tipo_intencion
+  })
+
+  const { data, error } = await supabase
     .from('logs')
     .insert([log])
+    .select()
 
   if (error) {
-    console.error('Error saving log:', error)
+    console.error('❌ Error saving log:', {
+      error: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    })
+    throw error // Lanzar error para que sea capturado en route.ts
   }
+
+  if (data && data.length > 0) {
+    console.log('✅ Log insertado en Supabase:', {
+      id: data[0].id,
+      telefono: data[0].telefono,
+      created_at: data[0].created_at
+    })
+  }
+
+  return data[0]
 }

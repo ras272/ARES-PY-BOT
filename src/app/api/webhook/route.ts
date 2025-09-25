@@ -83,11 +83,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Enviar respuesta por WhatsApp
+    console.log('📤 Enviando respuesta por WhatsApp...')
     const envioExitoso = await sendWhatsAppMessage(telefono, respuestaFinal)
 
     if (!envioExitoso) {
-      console.error('Error enviando mensaje de respuesta')
-      return NextResponse.json({ error: 'Failed to send response' }, { status: 500 })
+      console.error('❌ Error enviando mensaje de respuesta')
+      // Continuar guardando el log incluso si el envío falló
+    } else {
+      console.log('✅ Respuesta enviada exitosamente por WhatsApp')
     }
 
     // Si es ventas y detectamos interés, guardar lead
@@ -105,16 +108,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Guardar log de la conversación
+    // Guardar log de la conversación (SIEMPRE se ejecuta)
+    console.log('💾 Guardando log de conversación...')
     try {
-      await saveLog({
+      const logResult = await saveLog({
         telefono,
         mensaje_entrada: mensajeCliente,
         mensaje_salida: respuestaFinal,
         tipo_intencion: intent
       })
+      console.log('🎉 Proceso de webhook completado exitosamente')
     } catch (error) {
-      console.error('Error guardando log:', error)
+      console.error('💥 Error CRÍTICO guardando log:', error)
+      // No lanzamos el error para no romper el webhook, pero lo logueamos
     }
 
     console.log(`Respuesta enviada a ${telefono}: ${respuestaFinal.substring(0, 100)}...`)
