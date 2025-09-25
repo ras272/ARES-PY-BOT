@@ -4,6 +4,9 @@ import { WhatsAppConfig } from './types'
  * Obtiene la configuración de WhatsApp (phoneId y token) según el canal
  */
 export function getWhatsappConfig(channel: string): WhatsAppConfig {
+  // Si el canal es unknown, usar ventas como fallback
+  const actualChannel = channel === 'unknown' ? 'ventas' : channel
+
   const configs = {
     ventas: {
       phoneId: process.env.WHATSAPP_PHONE_ID_VENTAS || process.env.WHATSAPP_PHONE_ID || '',
@@ -23,10 +26,10 @@ export function getWhatsappConfig(channel: string): WhatsAppConfig {
     }
   }
 
-  const config = configs[channel as keyof typeof configs] || configs.unknown
+  const config = configs[actualChannel as keyof typeof configs] || configs.ventas
 
   if (!config.phoneId || !config.token) {
-    console.error(`❌ Configuración incompleta para canal ${channel}`)
+    console.error(`❌ Configuración incompleta para canal ${actualChannel} (original: ${channel})`)
   }
 
   return config
