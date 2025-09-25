@@ -1,8 +1,10 @@
-import { ParsedWebhookData, FlowResponse } from '../../whatsapp'
+import { ParsedWebhookData, FlowResponse } from '../../whatsapp/types'
 import { isGreeting, getTimeBasedGreeting, classifyIntent, extractEquipoInteres } from '../../classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '../../openai'
 import { getPdfText } from '../../pdf-loader'
-import { sendTextMessage, sendButtonMessage, sendListMessage } from '../../whatsapp'
+import { sendTextMessage } from '../../whatsapp/sendMessage'
+import { sendButtonMessage } from '../../whatsapp/sendButtons'
+import { sendListMessage } from '../../whatsapp/sendList'
 
 /**
  * Maneja el flujo completo de ventas

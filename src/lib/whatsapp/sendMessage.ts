@@ -1,4 +1,4 @@
-import { WhatsAppMessage } from './types'
+import { WhatsAppTextMessage } from './types'
 import { getWhatsappConfig } from './getWhatsappConfig'
 
 /**
@@ -26,7 +26,7 @@ export async function sendTextMessage(
         text: {
           body: message
         }
-      } as WhatsAppMessage)
+      } as WhatsAppTextMessage)
     })
 
     if (!response.ok) {

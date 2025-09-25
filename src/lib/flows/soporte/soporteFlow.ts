@@ -1,6 +1,7 @@
-import { ParsedWebhookData, FlowResponse } from '../../whatsapp'
+import { ParsedWebhookData, FlowResponse } from '../../whatsapp/types'
 import { isGreeting, getTimeBasedGreeting } from '../../classifier'
-import { sendTextMessage, sendButtonMessage } from '../../whatsapp'
+import { sendTextMessage } from '../../whatsapp/sendMessage'
+import { sendButtonMessage } from '../../whatsapp/sendButtons'
 
 /**
  * Maneja el flujo completo de soporte

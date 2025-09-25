@@ -1,6 +1,6 @@
 // app/api/webhook/route.ts - Orquestador principal del bot de WhatsApp (versión refactorizada)
 import { NextRequest, NextResponse } from 'next/server'
-import { parseWebhookPayload } from '@/lib/whatsapp'
+import { parseWebhookPayload } from '@/lib/whatsapp/parseWebhook'
 import { handleVentasFlow, handleSoporteFlow, handleContabilidadFlow } from '@/lib/flows'
 import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 import { classifyIntent } from '@/lib/classifier'
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       default:
         console.warn(`⚠️ Canal desconocido: ${parsedData.channel}, usando ventas por defecto`)
         const { handleVentasFlow: defaultFlow } = await import('@/lib/flows/ventas')
-        flowResponse = await handleVentasFlow(parsedData)
+        flowResponse = await defaultFlow(parsedData)
     }
 
     // 4. Guardar lead si es necesario

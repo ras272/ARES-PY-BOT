@@ -26,8 +26,8 @@ export function parseWebhookPayload(payload: WhatsAppWebhookPayload): ParsedWebh
 
     // Determinar tipo de mensaje
     let messageType: 'text' | 'button_reply' | 'list_reply' = 'text'
-    let buttonReplyId: string | undefined
-    let listReplyId: string | undefined
+    let buttonReplyId: string | null = null
+    let listReplyId: string | null = null
 
     if (message.interactive) {
       if (message.interactive.type === 'button_reply') {

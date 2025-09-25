@@ -35,6 +35,15 @@ export interface WhatsAppMessage {
   type: 'text' | 'interactive'
 }
 
+export interface WhatsAppTextMessage {
+  messaging_product: "whatsapp"
+  to: string
+  type: "text"
+  text: {
+    body: string
+  }
+}
+
 export interface WhatsAppContact {
   profile: {
     name: string
@@ -46,8 +55,8 @@ export interface ParsedWebhookData {
   customerName: string
   messageText: string
   messageType: 'text' | 'button_reply' | 'list_reply'
-  buttonReplyId?: string
-  listReplyId?: string
+  buttonReplyId: string | null
+  listReplyId: string | null
   phoneNumberId: string
   channel: 'ventas' | 'soporte' | 'contabilidad' | 'unknown'
 }
@@ -65,5 +74,56 @@ export interface FlowResponse {
     telefono: string
     mensaje: string
     equipo_interes?: string
+  }
+}
+
+export interface WhatsAppInteractiveMessage {
+  messaging_product: "whatsapp"
+  to: string
+  type: "interactive"
+  interactive: {
+    type: "button" | "list"
+    body: {
+      text: string
+    }
+    action: {
+      buttons?: Array<{
+        type: "reply"
+        reply: {
+          id: string
+          title: string
+        }
+      }>
+    }
+  }
+}
+
+export interface WhatsAppListMessage {
+  messaging_product: "whatsapp"
+  to: string
+  type: "interactive"
+  interactive: {
+    type: "list"
+    header?: {
+      type: "text"
+      text: string
+    }
+    body: {
+      text: string
+    }
+    footer?: {
+      text: string
+    }
+    action: {
+      button: string
+      sections: Array<{
+        title: string
+        rows: Array<{
+          id: string
+          title: string
+          description?: string
+        }>
+      }>
+    }
   }
 }
