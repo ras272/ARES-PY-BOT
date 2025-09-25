@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     console.log(`Intención clasificada: ${intent}`)
 
     let respuestaFinal = ''
-    let equipoInteres: string | null = null
+    let equipoInteres: string | undefined = undefined
 
     // Procesar según la intención
     switch (intent) {
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
             respuestaFinal = await generateSalesResponse(mensajeCliente, contextoPDF)
 
             // Detectar equipo de interés
-            equipoInteres = extractEquipoInteres(mensajeCliente)
+            equipoInteres = extractEquipoInteres(mensajeCliente) || undefined
           }
         } catch (error) {
           console.error('Error procesando mensaje de ventas:', error)
