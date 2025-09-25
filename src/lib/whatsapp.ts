@@ -109,6 +109,36 @@ export interface WhatsAppInteractiveMessage {
   }
 }
 
+export interface WhatsAppListMessage {
+  messaging_product: "whatsapp"
+  to: string
+  type: "interactive"
+  interactive: {
+    type: "list"
+    header: {
+      type: "text"
+      text: string
+    }
+    body: {
+      text: string
+    }
+    footer?: {
+      text: string
+    }
+    action: {
+      button: string
+      sections: Array<{
+        title: string
+        rows: Array<{
+          id: string
+          title: string
+          description: string
+        }>
+      }>
+    }
+  }
+}
+
 // Función para enviar mensaje interactivo con botones
 export async function sendWhatsAppInteractiveMessage(
   to: string,
@@ -155,6 +185,64 @@ export async function sendWhatsAppInteractiveMessage(
     return true
   } catch (error) {
     console.error('Error sending WhatsApp interactive message:', error)
+    return false
+  }
+}
+
+// Función para enviar mensaje interactivo con lista desplegable
+export async function sendWhatsAppListMessage(
+  to: string,
+  headerText: string,
+  bodyText: string,
+  buttonText: string,
+  sections: Array<{
+    title: string
+    rows: Array<{
+      id: string
+      title: string
+      description: string
+    }>
+  }>
+): Promise<boolean> {
+  try {
+    const response = await fetch(WHATSAPP_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "interactive",
+        interactive: {
+          type: "list",
+          header: {
+            type: "text",
+            text: headerText
+          },
+          body: {
+            text: bodyText
+          },
+          action: {
+            button: buttonText,
+            sections: sections
+          }
+        }
+      } as WhatsAppListMessage)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error('WhatsApp API Error (List):', errorData)
+      return false
+    }
+
+    const result = await response.json()
+    console.log('WhatsApp list message sent:', result)
+    return true
+  } catch (error) {
+    console.error('Error sending WhatsApp list message:', error)
     return false
   }
 }

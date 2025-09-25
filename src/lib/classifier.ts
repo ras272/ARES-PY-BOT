@@ -123,3 +123,17 @@ export function getButtonReplyId(message: any): string | null {
     return null
   }
 }
+
+// Función para detectar si un mensaje es una respuesta de lista interactiva
+export function getListReplyId(message: any): string | null {
+  try {
+    // Verificar si es un mensaje interactivo con list_reply
+    if (message?.interactive?.type === 'list_reply') {
+      return message.interactive.list_reply.id
+    }
+    return null
+  } catch (error) {
+    console.error('Error detectando respuesta de lista:', error)
+    return null
+  }
+}

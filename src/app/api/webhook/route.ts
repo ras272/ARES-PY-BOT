@@ -1,9 +1,9 @@
 // app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { classifyIntent, extractEquipoInteres, isGreeting, getTimeBasedGreeting, getButtonReplyId } from '@/lib/classifier'
+import { classifyIntent, extractEquipoInteres, isGreeting, getTimeBasedGreeting, getButtonReplyId, getListReplyId } from '@/lib/classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '@/lib/openai'
 import { getPdfText } from '@/lib/pdf-loader'
-import { sendWhatsAppMessage, sendWhatsAppInteractiveMessage } from '@/lib/whatsapp'
+import { sendWhatsAppMessage, sendWhatsAppInteractiveMessage, sendWhatsAppListMessage } from '@/lib/whatsapp'
 import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 
 // Variable para controlar que el test de conexión se ejecute solo una vez
@@ -37,16 +37,75 @@ export async function POST(request: NextRequest) {
 
     console.log(`Mensaje recibido de ${nombreCliente} (${telefono}): ${mensajeCliente}`)
 
+    // Variable para forzar flujo de ventas (cuando se selecciona equipos)
+    let forceVentasFlow = false
+
     // Verificar si es una respuesta de botón interactivo
     const buttonReplyId = getButtonReplyId(mensaje)
     if (buttonReplyId) {
       console.log(`🎯 Respuesta de botón detectada: ${buttonReplyId}`)
 
+      // Si es el botón "ventas", enviar menú de lista
+      if (buttonReplyId === 'ventas') {
+        console.log('🛍️ Enviando menú de lista para ventas...')
+
+        const sections = [
+          {
+            title: "Categorías de Productos",
+            rows: [
+              {
+                id: "ventas_insumos",
+                title: "Insumos",
+                description: "Tips, consumibles, repuestos"
+              },
+              {
+                id: "ventas_equipos",
+                title: "Equipos",
+                description: "HydraFacial, Ultraformer, CM Slim..."
+              }
+            ]
+          }
+        ]
+
+        console.log('📤 Enviando menú de lista interactivo...')
+        const envioExitoso = await sendWhatsAppListMessage(
+          telefono,
+          "Selecciona una categoría",
+          "Elige qué tipo de productos te interesan:",
+          "Ver opciones",
+          sections
+        )
+
+        if (!envioExitoso) {
+          console.error('❌ Error enviando menú de lista')
+          // Fallback a mensaje de texto
+          const fallbackMessage = "Elige una opción:\n• Insumos (tips, consumibles, repuestos)\n• Equipos (HydraFacial, Ultraformer, CM Slim...)\n\nResponde con 'insumos' o 'equipos'"
+          await sendWhatsAppMessage(telefono, fallbackMessage)
+        } else {
+          console.log('✅ Menú de lista enviado exitosamente')
+        }
+
+        // Guardar log del menú de lista
+        try {
+          const logData = {
+            telefono,
+            mensaje_entrada: `Botón: ${buttonReplyId}`,
+            mensaje_salida: 'Menú de lista enviado',
+            tipo_intencion: 'ventas_menu'
+          }
+          console.log('📋 Datos del log de menú a guardar:', logData)
+          await saveLog(logData)
+          console.log('🎉 Log de menú guardado exitosamente')
+        } catch (error) {
+          console.error('💥 Error guardando log de menú:', error)
+        }
+
+        return NextResponse.json({ status: 'success' })
+      }
+
+      // Para otros botones (soporte, contabilidad)
       let respuestaBoton = ''
       switch (buttonReplyId) {
-        case 'ventas':
-          respuestaBoton = 'Perfecto, cuéntame qué producto te interesa.'
-          break
         case 'soporte':
           respuestaBoton = 'Por favor, indícame el modelo o número de serie de tu equipo.'
           break
@@ -83,6 +142,63 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ status: 'success' })
+    }
+
+    // Verificar si es una respuesta de lista interactiva
+    const listReplyId = getListReplyId(mensaje)
+    if (listReplyId) {
+      console.log(`📋 Respuesta de lista detectada: ${listReplyId}`)
+
+      let respuestaLista = ''
+      let continuarConIA = false
+
+      switch (listReplyId) {
+        case 'ventas_insumos':
+          respuestaLista = 'Perfecto, ¿qué insumo te interesa? (tips, consumibles, repuestos, etc.)'
+          break
+        case 'ventas_equipos':
+          respuestaLista = 'Genial, ¿qué equipo te interesa? Cuéntame más sobre tus necesidades.'
+          continuarConIA = true // Continuar con lógica de IA para equipos
+          forceVentasFlow = true // Forzar clasificación como ventas
+          break
+        default:
+          respuestaLista = 'Opción no reconocida. ¿En qué podemos ayudarte?'
+      }
+
+      console.log('📤 Enviando respuesta de lista...')
+      const envioExitoso = await sendWhatsAppMessage(telefono, respuestaLista)
+
+      if (!envioExitoso) {
+        console.error('❌ Error enviando respuesta de lista')
+        return NextResponse.json({ error: 'Failed to send list response' }, { status: 500 })
+      } else {
+        console.log('✅ Respuesta de lista enviada exitosamente')
+      }
+
+      // Guardar log de la interacción con lista
+      try {
+        const logData = {
+          telefono,
+          mensaje_entrada: `Lista: ${listReplyId}`,
+          mensaje_salida: respuestaLista,
+          tipo_intencion: listReplyId
+        }
+        console.log('📋 Datos del log de lista a guardar:', logData)
+        await saveLog(logData)
+        console.log('🎉 Log de lista guardado exitosamente')
+      } catch (error) {
+        console.error('💥 Error guardando log de lista:', error)
+      }
+
+      // Si seleccionó equipos, continuar con flujo de IA
+      if (continuarConIA) {
+        console.log('🔄 Continuando con flujo de IA para equipos...')
+        // Aquí se continuará con la lógica normal de ventas después del return
+        // No hacer return aquí para que continúe con el flujo de IA
+      } else {
+        // Si no es equipos, terminar aquí
+        return NextResponse.json({ status: 'success' })
+      }
     }
 
     // Verificar si es un saludo
@@ -136,12 +252,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'success' })
     }
 
-    // Si no es saludo ni botón, continuar con el flujo normal
+    // Si no es saludo ni botón ni lista, continuar con el flujo normal
     console.log('🔄 Continuando con flujo normal de IA/clasificación...')
 
-    // Clasificar la intención del mensaje
-    const intent = classifyIntent(mensajeCliente)
-    console.log(`Intención clasificada: ${intent}`)
+    // Determinar la intención del mensaje
+    let intent: string
+    if (forceVentasFlow) {
+      intent = 'ventas'
+      console.log('🎯 Flujo forzado a ventas por selección de equipos')
+    } else {
+      intent = classifyIntent(mensajeCliente)
+      console.log(`Intención clasificada: ${intent}`)
+    }
 
     let respuestaFinal = ''
     let equipoInteres: string | undefined = undefined
