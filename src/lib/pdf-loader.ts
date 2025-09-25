@@ -1,6 +1,5 @@
 // lib/pdf-loader.ts
 import { supabase } from './supabase'
-import pdf from 'pdf-parse'
 
 let pdfCache: { [key: string]: string } = {}
 
@@ -27,7 +26,8 @@ export async function getPdfText(fileName: string): Promise<string> {
     // Convertir a buffer
     const buffer = Buffer.from(await data.arrayBuffer())
 
-    // Extraer texto del PDF
+    // Extraer texto del PDF (importación dinámica para evitar problemas de build)
+    const pdf = (await import('pdf-parse')).default
     const pdfData = await pdf(buffer)
 
     // Cachear el resultado
