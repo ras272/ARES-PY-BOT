@@ -9,23 +9,43 @@ import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 // Variable para controlar que el test de conexión se ejecute solo una vez
 let connectionTested = false
 
-// Configuración para el webhook de WhatsApp
-export const runtime = 'nodejs'
-
+// Endpoint de prueba para verificar Supabase
 export async function GET(request: NextRequest) {
-  // Verificación del webhook
-  const mode = request.nextUrl.searchParams.get('hub.mode')
-  const token = request.nextUrl.searchParams.get('hub.verify_token')
-  const challenge = request.nextUrl.searchParams.get('hub.challenge')
+  try {
+    console.log('🧪 Endpoint de prueba llamado')
 
-  // Verificar token (deberías usar un token personalizado)
-  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    console.log('Webhook verified successfully')
-    return new NextResponse(challenge)
-  } else {
-    return new NextResponse('Forbidden', { status: 403 })
+    // Importar la función de test
+    const { testSupabaseConnection } = await import('@/lib/supabase')
+
+    const isConnected = await testSupabaseConnection()
+
+    if (isConnected) {
+      return NextResponse.json({
+        status: 'success',
+        message: 'Conexión a Supabase exitosa',
+        timestamp: new Date().toISOString()
+      })
+    } else {
+      return NextResponse.json({
+        status: 'error',
+        message: 'Error de conexión a Supabase',
+        timestamp: new Date().toISOString()
+      }, { status: 500 })
+    }
+
+  } catch (error) {
+    console.error('💥 Error en endpoint de prueba:', error)
+    return NextResponse.json({
+      status: 'error',
+      message: 'Error interno del servidor',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
   }
 }
+
+// Configuración para el webhook de WhatsApp
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -143,5 +163,21 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error processing webhook:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Función GET para verificación de webhook (WhatsApp)
+export async function GET(request: NextRequest) {
+  // Verificación del webhook
+  const mode = request.nextUrl.searchParams.get('hub.mode')
+  const token = request.nextUrl.searchParams.get('hub.verify_token')
+  const challenge = request.nextUrl.searchParams.get('hub.challenge')
+
+  // Verificar token (deberías usar un token personalizado)
+  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    console.log('Webhook verified successfully')
+    return new NextResponse(challenge)
+  } else {
+    return new NextResponse('Forbidden', { status: 403 })
   }
 }
