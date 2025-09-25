@@ -9,41 +9,6 @@ import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 // Variable para controlar que el test de conexión se ejecute solo una vez
 let connectionTested = false
 
-// Endpoint de prueba para verificar Supabase
-export async function GET(request: NextRequest) {
-  try {
-    console.log('🧪 Endpoint de prueba llamado')
-
-    // Importar la función de test
-    const { testSupabaseConnection } = await import('@/lib/supabase')
-
-    const isConnected = await testSupabaseConnection()
-
-    if (isConnected) {
-      return NextResponse.json({
-        status: 'success',
-        message: 'Conexión a Supabase exitosa',
-        timestamp: new Date().toISOString()
-      })
-    } else {
-      return NextResponse.json({
-        status: 'error',
-        message: 'Error de conexión a Supabase',
-        timestamp: new Date().toISOString()
-      }, { status: 500 })
-    }
-
-  } catch (error) {
-    console.error('💥 Error en endpoint de prueba:', error)
-    return NextResponse.json({
-      status: 'error',
-      message: 'Error interno del servidor',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 })
-  }
-}
-
 // Configuración para el webhook de WhatsApp
 export const runtime = 'nodejs'
 
@@ -166,18 +131,52 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función GET para verificación de webhook (WhatsApp)
+// Función GET para verificación de webhook (WhatsApp) y prueba de Supabase
 export async function GET(request: NextRequest) {
-  // Verificación del webhook
+  // Verificar si es una petición de verificación de WhatsApp
   const mode = request.nextUrl.searchParams.get('hub.mode')
   const token = request.nextUrl.searchParams.get('hub.verify_token')
   const challenge = request.nextUrl.searchParams.get('hub.challenge')
 
-  // Verificar token (deberías usar un token personalizado)
-  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    console.log('Webhook verified successfully')
-    return new NextResponse(challenge)
-  } else {
-    return new NextResponse('Forbidden', { status: 403 })
+  // Si tiene parámetros de WhatsApp, es verificación de webhook
+  if (mode === 'subscribe') {
+    // Verificar token
+    if (token === process.env.WHATSAPP_VERIFY_TOKEN) {
+      console.log('✅ Webhook verified successfully')
+      return new NextResponse(challenge)
+    } else {
+      console.log('❌ Webhook verification failed - invalid token')
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  }
+
+  // Si no tiene parámetros de WhatsApp, es petición de prueba de Supabase
+  try {
+    console.log('🧪 Endpoint de prueba de Supabase llamado')
+
+    const isConnected = await testSupabaseConnection()
+
+    if (isConnected) {
+      return NextResponse.json({
+        status: 'success',
+        message: 'Conexión a Supabase exitosa',
+        timestamp: new Date().toISOString()
+      })
+    } else {
+      return NextResponse.json({
+        status: 'error',
+        message: 'Error de conexión a Supabase',
+        timestamp: new Date().toISOString()
+      }, { status: 500 })
+    }
+
+  } catch (error) {
+    console.error('💥 Error en endpoint de prueba:', error)
+    return NextResponse.json({
+      status: 'error',
+      message: 'Error interno del servidor',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
   }
 }
