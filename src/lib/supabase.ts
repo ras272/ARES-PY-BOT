@@ -60,34 +60,6 @@ export async function saveLead(lead: {
   return data[0]
 }
 
-// Función de diagnóstico para probar la conexión
-export async function testSupabaseConnection() {
-  try {
-    console.log('🔍 Probando conexión a Supabase...')
-
-    // Intentar hacer una consulta simple
-    const { data, error } = await supabase
-      .from('logs')
-      .select('count', { count: 'exact', head: true })
-
-    if (error) {
-      console.error('❌ Error de conexión a Supabase:', {
-        error: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      })
-      return false
-    }
-
-    console.log('✅ Conexión a Supabase exitosa')
-    return true
-  } catch (error) {
-    console.error('💥 Error crítico probando conexión:', error)
-    return false
-  }
-}
-
 // Función para guardar logs
 export async function saveLog(log: {
   telefono: string
