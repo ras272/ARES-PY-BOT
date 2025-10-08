@@ -92,6 +92,11 @@ export function isGreeting(message: string): boolean {
 // Función para detectar mensajes de cortesía, agradecimiento o despedida
 export function isCourtesyMessage(message: string): boolean {
   const lower = message.toLowerCase().trim()
+  
+  // Mensajes extremadamente cortos (1-3 caracteres) son casuales
+  if (lower.length <= 3) {
+    return true
+  }
 
   const courtesyKeywords = [
     'gracias', 'graciass', 'thanks', 'thank you', 'muchas gracias',
@@ -100,9 +105,25 @@ export function isCourtesyMessage(message: string): boolean {
     'chau', 'adiós', 'adios', 'hasta luego', 'nos vemos', 'bye'
   ]
 
-  // Si el mensaje es muy corto y coincide exactamente con alguna keyword
-  if (lower.length <= 15) {
-    return courtesyKeywords.some(keyword => lower === keyword || lower.includes(keyword))
+  // Risas y expresiones casuales
+  const casualExpressions = [
+    'jaja', 'jajaja', 'jajajaja', 'jeje', 'jejeje', 'jiji', 
+    'jijiji', 'lol', 'jajá', 'jjj', 'jajaj', 'jajajaj',
+    'ah', 'oh', 'uf', 'wow', 'okey', 'dale', 'bueno',
+    'mm', 'mmm', 'mmmm', 'ajá', 'aja', 'ehh', 'hmm'
+  ]
+
+  // Si el mensaje es corto (<=20 caracteres) y coincide con keywords o expresiones
+  if (lower.length <= 20) {
+    const allKeywords = [...courtesyKeywords, ...casualExpressions]
+    if (allKeywords.some(keyword => lower === keyword || lower.includes(keyword))) {
+      return true
+    }
+  }
+
+  // Detectar patrones de risas repetitivas (ja+, je+, ji+, etc.)
+  if (/^(ja)+$/i.test(lower) || /^(je)+$/i.test(lower) || /^(ji)+$/i.test(lower)) {
+    return true
   }
 
   return false
