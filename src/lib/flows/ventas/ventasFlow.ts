@@ -76,7 +76,50 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: 'Lista de ventas enviada' }
   }
 
-  // 3. Si es respuesta de botón "administracion", redirigir a WhatsApp
+  // 3. Si es respuesta de botón "soporte", enviar lista de opciones de soporte
+  if (buttonReplyId === 'soporte') {
+    console.log('🔧 Solicitud de Soporte, enviando lista de opciones...')
+    const sections = [
+      {
+        title: "Opciones de Soporte",
+        rows: [
+          {
+            id: "soporte_servicio_tecnico",
+            title: "Servicio Técnico",
+            description: "Reparaciones y mantenimiento"
+          },
+          {
+            id: "soporte_pedidos_insumos",
+            title: "Pedidos de Insumos",
+            description: "Tips, consumibles, repuestos"
+          },
+          {
+            id: "soporte_hablar_agente",
+            title: "Hablar con un Agente",
+            description: "Contacto directo con soporte"
+          },
+          {
+            id: "volver_menu",
+            title: "⬅️ Volver al menú",
+            description: "Regresar al menú principal"
+          }
+        ]
+      }
+    ]
+
+    await sendListMessage(
+      phoneNumber,
+      "Selecciona una opción",
+      "¿En qué podemos ayudarte?",
+      "Ver opciones",
+      sections,
+      'ventas'
+    )
+
+    return { message: 'Lista de soporte enviada' }
+  }
+
+  // 4. Si es respuesta de botón "administracion", redirigir a WhatsApp
   if (buttonReplyId === 'administracion') {
     console.log('📋 Solicitud de Administración, redirigiendo a WhatsApp...')
     const adminPhone = '595981221166'
@@ -86,7 +129,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: adminMessage }
   }
 
-  // 4. Si es respuesta de lista
+  // 5. Si es respuesta de lista
   if (listReplyId) {
     switch (listReplyId) {
       case 'ventas_tecnologia_medica':
@@ -100,6 +143,24 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         const cosmeticaMessage = `¡Excelente elección! 💄\n\nTe voy a conectar con nuestro equipo de Cosmética.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${cosmeticaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
         await sendTextMessage(phoneNumber, cosmeticaMessage, 'ventas')
         return { message: cosmeticaMessage }
+
+      case 'soporte_servicio_tecnico':
+        const tecnicoPhone = '595981255999'
+        const tecnicoMessage = `¡Perfecto! 🛠️\n\nTe voy a conectar con nuestro equipo de Servicio Técnico.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecnicoPhone}\n\n¡Te ayudarán con cualquier problema técnico! 😊`
+        await sendTextMessage(phoneNumber, tecnicoMessage, 'ventas')
+        return { message: tecnicoMessage }
+
+      case 'soporte_pedidos_insumos':
+        const insumosPhone = '595981255999'
+        const insumosMessage = `¡Excelente! 📦\n\nTe voy a conectar con nuestro equipo de Pedidos de Insumos.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${insumosPhone}\n\n¡Te ayudarán con tu pedido! 😊`
+        await sendTextMessage(phoneNumber, insumosMessage, 'ventas')
+        return { message: insumosMessage }
+
+      case 'soporte_hablar_agente':
+        const agentePhone = '595981255999'
+        const agenteMessage = `¡Por supuesto! 👤\n\nTe voy a conectar con uno de nuestros agentes.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${agentePhone}\n\n¡Te atenderán enseguida! 😊`
+        await sendTextMessage(phoneNumber, agenteMessage, 'ventas')
+        return { message: agenteMessage }
 
       case 'volver_menu':
         // Enviar menú principal de nuevo
@@ -125,7 +186,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     }
   }
 
-  // 5. Si es mensaje de cortesía (gracias, ok, etc.), responder amigablemente
+  // 6. Si es mensaje de cortesía (gracias, ok, etc.), responder amigablemente
   if (isCourtesyMessage(messageText)) {
     console.log('💚 Mensaje de cortesía detectado')
     const courtesyResponse = '¡Con gusto! 😊 Si necesitas algo más, aquí estaré para ayudarte. ¡Que tengas un excelente día! ✨'
@@ -133,7 +194,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: courtesyResponse }
   }
 
-  // 6. Si es mensaje de texto normal, procesar con IA
+  // 7. Si es mensaje de texto normal, procesar con IA
   return await processSalesInquiry(messageText, phoneNumber, customerName)
 }
 
