@@ -38,37 +38,14 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: 'Menú interactivo enviado' }
   }
 
-  // 2. Si es respuesta de botón "ventas", enviar menú de lista
+  // 2. Si es respuesta de botón "ventas" (Administracion), redirigir a WhatsApp de administración
   if (buttonReplyId === 'ventas') {
-    console.log('🛍️ Solicitud de menú de productos, enviando lista...')
-    const sections = [
-      {
-        title: "Categorías de Productos",
-        rows: [
-          {
-            id: "ventas_insumos",
-            title: "Insumos",
-            description: "Tips, consumibles, repuestos"
-          },
-          {
-            id: "ventas_equipos",
-            title: "Equipos",
-            description: "HydraFacial, Ultraformer, CM Slim..."
-          }
-        ]
-      }
-    ]
-
-    await sendListMessage(
-      phoneNumber,
-      "Selecciona una categoría",
-      "Elige qué tipo de productos te interesan:",
-      "Ver opciones",
-      sections,
-      'ventas'
-    )
-
-    return { message: 'Menú de lista enviado' }
+    console.log('📋 Solicitud de Administración, redirigiendo a WhatsApp...')
+    const adminPhone = '595981221166'
+    const adminMessage = `¡Perfecto! 🌟\n\nTe voy a conectar con nuestro equipo de Administración.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${adminPhone}\n\n¡Estarán encantados de ayudarte! 😊`
+    
+    await sendTextMessage(phoneNumber, adminMessage, 'ventas')
+    return { message: adminMessage }
   }
 
   // 3. Si es respuesta de lista
