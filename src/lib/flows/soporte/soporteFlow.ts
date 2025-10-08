@@ -35,11 +35,14 @@ export async function handleSoporteFlow(data: ParsedWebhookData): Promise<FlowRe
     return { message: 'Menú interactivo enviado' }
   }
 
-  // 2. Si es respuesta de botón "soporte"
+  // 2. Si es respuesta de botón "soporte", redirigir a WhatsApp de soporte
   if (buttonReplyId === 'soporte') {
-    const response = `Hola ${customerName}, gracias por contactarnos. Actualmente estamos trabajando para brindarte el mejor soporte automatizado. Un agente especializado te contactará pronto para ayudarte.`
-    await sendTextMessage(phoneNumber, response, 'soporte')
-    return { message: response }
+    console.log('🔧 Solicitud de Soporte, redirigiendo a WhatsApp...')
+    const soportePhone = '595981255999'
+    const soporteMessage = `¡Perfecto! 🛠️\n\nTe voy a conectar con nuestro equipo de Soporte Técnico.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${soportePhone}\n\n¡Estarán listos para resolver cualquier duda! 😊`
+    
+    await sendTextMessage(phoneNumber, soporteMessage, 'soporte')
+    return { message: soporteMessage }
   }
 
   // 3. Si es mensaje de cortesía

@@ -35,11 +35,14 @@ export async function handleContabilidadFlow(data: ParsedWebhookData): Promise<F
     return { message: 'Menú interactivo enviado' }
   }
 
-  // 2. Si es respuesta de botón "contabilidad"
+  // 2. Si es respuesta de botón "contabilidad" (Ventas), redirigir a WhatsApp de ventas
   if (buttonReplyId === 'contabilidad') {
-    const response = `Hola ${customerName}, gracias por tu mensaje sobre contabilidad. Un miembro de nuestro equipo de contabilidad te responderá en breve.`
-    await sendTextMessage(phoneNumber, response, 'contabilidad')
-    return { message: response }
+    console.log('💼 Solicitud de Ventas, redirigiendo a WhatsApp...')
+    const ventasPhone = '595994750076'
+    const ventasMessage = `¡Excelente! 🎯\n\nTe voy a conectar con nuestro equipo de Ventas.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${ventasPhone}\n\n¡Te atenderán con mucho gusto! 😊`
+    
+    await sendTextMessage(phoneNumber, ventasMessage, 'contabilidad')
+    return { message: ventasMessage }
   }
 
   // 3. Si es mensaje de cortesía
