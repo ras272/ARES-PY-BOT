@@ -89,6 +89,25 @@ export function isGreeting(message: string): boolean {
   return greetingKeywords.some(keyword => lower.includes(keyword))
 }
 
+// Función para detectar mensajes de cortesía, agradecimiento o despedida
+export function isCourtesyMessage(message: string): boolean {
+  const lower = message.toLowerCase().trim()
+
+  const courtesyKeywords = [
+    'gracias', 'graciass', 'thanks', 'thank you', 'muchas gracias',
+    'ok', 'okay', 'vale', 'perfecto', 'genial', 'excelente',
+    'entendido', 'listo', 'de acuerdo', 'dale', 'si', 'sí',
+    'chau', 'adiós', 'adios', 'hasta luego', 'nos vemos', 'bye'
+  ]
+
+  // Si el mensaje es muy corto y coincide exactamente con alguna keyword
+  if (lower.length <= 15) {
+    return courtesyKeywords.some(keyword => lower === keyword || lower.includes(keyword))
+  }
+
+  return false
+}
+
 // Función para obtener saludo según la hora del día (zona horaria de Paraguay)
 export function getTimeBasedGreeting(): string {
   try {

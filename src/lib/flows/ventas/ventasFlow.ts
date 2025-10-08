@@ -1,5 +1,5 @@
 import { ParsedWebhookData, FlowResponse } from '../../whatsapp/types'
-import { isGreeting, getTimeBasedGreeting, classifyIntent, extractEquipoInteres } from '../../classifier'
+import { isGreeting, isCourtesyMessage, getTimeBasedGreeting, classifyIntent, extractEquipoInteres } from '../../classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '../../openai'
 import { getPdfText } from '../../pdf-loader'
 import { sendTextMessage } from '../../whatsapp/sendMessage'
@@ -64,7 +64,15 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     }
   }
 
-  // 4. Si es mensaje de texto normal, procesar con IA
+  // 4. Si es mensaje de cortesía (gracias, ok, etc.), responder amigablemente
+  if (isCourtesyMessage(messageText)) {
+    console.log('💚 Mensaje de cortesía detectado')
+    const courtesyResponse = '¡Con gusto! 😊 Si necesitas algo más, aquí estaré para ayudarte. ¡Que tengas un excelente día! ✨'
+    await sendTextMessage(phoneNumber, courtesyResponse, 'ventas')
+    return { message: courtesyResponse }
+  }
+
+  // 5. Si es mensaje de texto normal, procesar con IA
   return await processSalesInquiry(messageText, phoneNumber, customerName)
 }
 
