@@ -23,9 +23,9 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
       : `${saludo}! 👋`
 
     const buttons = [
-      { id: 'ventas', title: 'Administracion' },
+      { id: 'ventas', title: 'Ventas' },
       { id: 'soporte', title: 'Soporte' },
-      { id: 'contabilidad', title: 'Ventas' }
+      { id: 'administracion', title: 'Administración' }
     ]
 
     await sendButtonMessage(
@@ -38,8 +38,46 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: 'Menú interactivo enviado' }
   }
 
-  // 2. Si es respuesta de botón "ventas" (Administracion), redirigir a WhatsApp de administración
+  // 2. Si es respuesta de botón "ventas", enviar lista de opciones de ventas
   if (buttonReplyId === 'ventas') {
+    console.log('💼 Solicitud de Ventas, enviando lista de opciones...')
+    const sections = [
+      {
+        title: "Opciones de Ventas",
+        rows: [
+          {
+            id: "ventas_tecnologia_medica",
+            title: "Tecnología Médica",
+            description: "Equipos y soluciones médicas"
+          },
+          {
+            id: "ventas_cosmetica",
+            title: "Cosmética",
+            description: "Productos y equipos cosméticos"
+          },
+          {
+            id: "volver_menu",
+            title: "⬅️ Volver al menú",
+            description: "Regresar al menú principal"
+          }
+        ]
+      }
+    ]
+
+    await sendListMessage(
+      phoneNumber,
+      "Selecciona una opción",
+      "¿Qué tipo de productos te interesan?",
+      "Ver opciones",
+      sections,
+      'ventas'
+    )
+
+    return { message: 'Lista de ventas enviada' }
+  }
+
+  // 3. Si es respuesta de botón "administracion", redirigir a WhatsApp
+  if (buttonReplyId === 'administracion') {
     console.log('📋 Solicitud de Administración, redirigiendo a WhatsApp...')
     const adminPhone = '595981221166'
     const adminMessage = `¡Perfecto! 🌟\n\nTe voy a conectar con nuestro equipo de Administración.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${adminPhone}\n\n¡Estarán encantados de ayudarte! 😊`
@@ -48,23 +86,46 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: adminMessage }
   }
 
-  // 3. Si es respuesta de lista
+  // 4. Si es respuesta de lista
   if (listReplyId) {
     switch (listReplyId) {
-      case 'ventas_insumos':
-        const insumosMessage = 'Perfecto, ¿qué insumo te interesa? (tips, consumibles, repuestos, etc.)'
-        await sendTextMessage(phoneNumber, insumosMessage, 'ventas')
-        return { message: insumosMessage }
+      case 'ventas_tecnologia_medica':
+        const tecMedicaPhone = '595994750076'
+        const tecMedicaMessage = `¡Excelente elección! 🏥\n\nTe voy a conectar con nuestro equipo de Tecnología Médica.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecMedicaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
+        await sendTextMessage(phoneNumber, tecMedicaMessage, 'ventas')
+        return { message: tecMedicaMessage }
 
-      case 'ventas_equipos':
-        const equiposMessage = 'Genial, ¿qué equipo te interesa? Cuéntame más sobre tus necesidades.'
-        await sendTextMessage(phoneNumber, equiposMessage, 'ventas')
-        // Continuar con IA para equipos
-        return await processEquiposInquiry(messageText, phoneNumber, customerName)
+      case 'ventas_cosmetica':
+        const cosmeticaPhone = '595994750076'
+        const cosmeticaMessage = `¡Excelente elección! 💄\n\nTe voy a conectar con nuestro equipo de Cosmética.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${cosmeticaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
+        await sendTextMessage(phoneNumber, cosmeticaMessage, 'ventas')
+        return { message: cosmeticaMessage }
+
+      case 'volver_menu':
+        // Enviar menú principal de nuevo
+        console.log('↩️ Volviendo al menú principal...')
+        const saludo = getTimeBasedGreeting()
+        const mensajeSaludo = customerName !== 'Cliente'
+          ? `${saludo} ${customerName}! 👋`
+          : `${saludo}! 👋`
+
+        const buttons = [
+          { id: 'ventas', title: 'Ventas' },
+          { id: 'soporte', title: 'Soporte' },
+          { id: 'administracion', title: 'Administración' }
+        ]
+
+        await sendButtonMessage(
+          phoneNumber,
+          `${mensajeSaludo}\n\n¿En qué podemos ayudarte hoy?`,
+          buttons,
+          'ventas'
+        )
+        return { message: 'Menú principal enviado' }
     }
   }
 
-  // 4. Si es mensaje de cortesía (gracias, ok, etc.), responder amigablemente
+  // 5. Si es mensaje de cortesía (gracias, ok, etc.), responder amigablemente
   if (isCourtesyMessage(messageText)) {
     console.log('💚 Mensaje de cortesía detectado')
     const courtesyResponse = '¡Con gusto! 😊 Si necesitas algo más, aquí estaré para ayudarte. ¡Que tengas un excelente día! ✨'
@@ -72,7 +133,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
     return { message: courtesyResponse }
   }
 
-  // 5. Si es mensaje de texto normal, procesar con IA
+  // 6. Si es mensaje de texto normal, procesar con IA
   return await processSalesInquiry(messageText, phoneNumber, customerName)
 }
 

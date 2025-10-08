@@ -20,9 +20,9 @@ export async function handleContabilidadFlow(data: ParsedWebhookData): Promise<F
       : `${saludo}! 👋`
 
     const buttons = [
-      { id: 'ventas', title: 'Administracion' },
+      { id: 'ventas', title: 'Ventas' },
       { id: 'soporte', title: 'Soporte' },
-      { id: 'contabilidad', title: 'Ventas' }
+      { id: 'administracion', title: 'Administración' }
     ]
 
     await sendButtonMessage(
