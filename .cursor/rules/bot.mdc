@@ -1,0 +1,82 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# WhatsApp Bot ARES – Project Rules
+
+Objetivo general:
+Mantener un proyecto escalable, limpio y modular. Cada cambio debe reducir complejidad, evitar archivos gigantes y mantener una arquitectura clara por dominios.
+
+## 1. Estructura del Proyecto
+
+- src/app/api/webhook/route.ts:
+  - Debe ser minimalista (<80 líneas).
+  - Solo orquesta: parsea payload, decide flujo, llama funciones y responde.
+  - No debe contener lógica de negocio, payloads ni llamadas directas a APIs.
+
+- src/lib/whatsapp/:
+  - parseWebhook.ts → normaliza el payload (texto, botón, lista, phoneNumberId).
+  - sendMessage.ts → función genérica para enviar texto.
+  - sendButtons.ts → envía menú inicial (Ventas, Soporte, Contabilidad).
+  - sendList.ts → envía submenús (ej. Insumos/Equipos).
+  - getWhatsappConfig.ts → devuelve phoneId y token correcto según canal/número.
+
+- src/lib/flows/
+  - Carpeta por dominio: ventas/, soporte/, contabilidad/.
+  - Cada carpeta tiene su flow principal (ventasFlow.ts, etc.) y archivos de payload/menús si hace falta.
+  - Cada flow maneja su lógica completa: submenús, respuestas, integración con IA.
+  - Todos los logs y errores de ese flujo se manejan ahí.
+
+- src/lib/supabase.ts:
+  - Cliente usando SUPABASE_SERVICE_ROLE_KEY.
+  - saveLog() y saveLead() con manejo de errores y console.log para debug.
+  - Nunca “tragar” errores silenciosamente.
+
+- src/lib/openai.ts:
+  - Contiene system prompt configurable.
+  - Funciones para generar respuestas con IA según el contexto.
+
+## 2. Estándares de Código
+
+- Tipado estricto con TypeScript.
+- Una función = una responsabilidad (SRP).
+- Nada de lógica compleja en route.ts.
+- Reutilizar funciones de envío de mensajes, no duplicar fetchs.
+
+## 3. Multi-Número (Canales)
+
+- Usar metadata.phone_number_id para detectar a qué número escribieron.
+- Variables de entorno:
+  - WHATSAPP_PHONE_ID_VENTAS / SOPORTE / CONTABILIDAD
+  - WHATSAPP_TOKEN_VENTAS / SOPORTE / CONTABILIDAD
+- Router debe elegir flow correcto y responder desde el mismo número.
+- Guardar el canal en logs para trazabilidad.
+
+## 4. Flujos y Submenús
+
+- Cada flow puede tener niveles:
+  - Ej: ventasFlow → primer botón → segundo menú tipo lista (Insumos/Equipos).
+- Manejar button_reply y list_reply.
+- Si es una opción que requiere IA, cargar contexto y pasar a openai.ts.
+
+## 5. Logging y Debugging
+
+- Siempre loggear entrada y salida de cada flow en consola.
+- Guardar todo en tabla logs de Supabase con:
+  - telefono, mensaje_entrada, mensaje_salida, tipo_intencion, canal, timestamp.
+- Si hay error en Supabase, mostrar error en consola pero no romper el flujo.
+
+## 6. Extensibilidad
+
+- Cada vez que se agregue nueva feature, crear un archivo o carpeta dedicada.
+- Evitar que route.ts vuelva a crecer.
+- Documentar cada función con comentarios claros.
+
+## 7. Estilo y Buenas Prácticas
+
+- Código limpio y comentado.
+- No hardcodear valores, usar variables de entorno.
+- Usar helpers y utils para payloads complejos.
+- Mantener consistencia en nombres (camelCase en TS, snake_case en DB).
