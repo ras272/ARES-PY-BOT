@@ -165,11 +165,12 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
           'ventas'
         )
         return { message: 'Menú principal enviado' }
-    }
-  }
 
-  // 6. SIEMPRE ofrecer volver al menú principal después de cualquier acción
-  return await handlePostBackToMenu(phoneNumber, customerName)
+      default:
+        // Si es any other case, volvemos al menú principal
+        console.log('⚠️ Opción desconocida, volviendo al menú principal...')
+        return await handlePostBackToMenu(phoneNumber, customerName)
+    }
 }
 
 /**

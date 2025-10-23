@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
         const { handleSoporteFlow } = await import('@/lib/flows/soporte')
         flowResponse = await handleSoporteFlow(parsedData)
       } else if (parsedData.buttonReplyId === 'administracion' || parsedData.listReplyId?.includes('administracion')) {
-        const { handleContabilidadFlow } = await import('@/lib/flows/contabilidad')
-        flowResponse = await handleContabilidadFlow(parsedData)
+        const { handleVentasFlow: ventasFlow } = await import('@/lib/flows/ventas')
+        flowResponse = await ventasFlow(parsedData)
       } else {
         // Si es cualquier otro botón, procesar con ventas por defecto
         const { handleVentasFlow: defaultFlow } = await import('@/lib/flows/ventas')
