@@ -1,9 +1,8 @@
 // app/api/webhook/route.ts - Orquestador principal del bot de WhatsApp (versión refactorizada)
 import { NextRequest, NextResponse } from 'next/server'
 import { parseWebhookPayload } from '@/lib/whatsapp/parseWebhook'
-import { handleVentasFlow, handleSoporteFlow, handleContabilidadFlow } from '@/lib/flows'
+import { sendMainMenuFlow } from '@/lib/flows'
 import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
-import { classifyIntent } from '@/lib/classifier'
 
 // Variable para controlar que el test de conexión se ejecute solo una vez
 let connectionTested = false
@@ -28,31 +27,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'no_message' })
     }
 
-    console.log(`📨 Mensaje procesado - Canal: ${parsedData.channel}, Tipo: ${parsedData.messageType}`)
+    console.log(`📨 Mensaje procesado - Tipo: ${parsedData.messageType}`)
 
-    // 3. Enrutar al flow correspondiente según el canal
+    // 3. Enviar menú principal siempre para cualquier mensaje de texto
     let flowResponse
 
-    switch (parsedData.channel) {
-      case 'ventas':
+    // Si es respuesta de botón/lista, procesar flow específico
+    if (parsedData.buttonReplyId || parsedData.listReplyId) {
+      if (parsedData.buttonReplyId === 'ventas' || parsedData.listReplyId?.includes('ventas')) {
         const { handleVentasFlow } = await import('@/lib/flows/ventas')
         flowResponse = await handleVentasFlow(parsedData)
-        break
-
-      case 'soporte':
+      } else if (parsedData.buttonReplyId === 'soporte' || parsedData.listReplyId?.includes('soporte')) {
         const { handleSoporteFlow } = await import('@/lib/flows/soporte')
         flowResponse = await handleSoporteFlow(parsedData)
-        break
-
-      case 'contabilidad':
+      } else if (parsedData.buttonReplyId === 'administracion' || parsedData.listReplyId?.includes('administracion')) {
         const { handleContabilidadFlow } = await import('@/lib/flows/contabilidad')
         flowResponse = await handleContabilidadFlow(parsedData)
-        break
-
-      default:
-        console.warn(`⚠️ Canal desconocido: ${parsedData.channel}, usando ventas por defecto`)
+      } else {
+        // Si es cualquier otro botón, procesar con ventas por defecto
         const { handleVentasFlow: defaultFlow } = await import('@/lib/flows/ventas')
         flowResponse = await defaultFlow(parsedData)
+      }
+    } else {
+      // Si es texto normal, siempre mostrar menú principal
+      flowResponse = await sendMainMenuFlow(parsedData)
     }
 
     // 4. Guardar lead si es necesario
@@ -97,11 +95,11 @@ export async function POST(request: NextRequest) {
 function getIntentType(data: any, response: string): string {
   if (data.buttonReplyId) return data.buttonReplyId
   if (data.listReplyId) return data.listReplyId
-  if (response.includes('Menú interactivo enviado')) return 'saludo'
-  if (response.includes('Menú de lista enviado')) return 'ventas_menu'
+  if (response.includes('Menú interactivo enviado')) return 'menu_principal'
+  if (response.includes('Menú de lista enviado')) return 'menu_lista'
 
-  // Importar clasificador para determinar intención de texto
-  return classifyIntent(data.messageText)
+  // Para texto normal, siempre indicar que es menú principal
+  return 'menu_principal'
 }
 
 // Función GET para verificación de webhook (WhatsApp) y prueba de Supabase
