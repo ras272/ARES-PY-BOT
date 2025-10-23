@@ -28,14 +28,19 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         title: "Opciones de Ventas",
         rows: [
           {
-            id: "ventas_tecnologia_medica",
-            title: "Tecnología Médica",
-            description: "Equipos y soluciones médicas"
+            id: "ventas_tecnologia",
+            title: "🏥 Tecnología",
+            description: "Equipos médicos y tecnología"
+          },
+          {
+            id: "ventas_insumos", 
+            title: "📦 Insumos",
+            description: "Consumibles y repuestos"
           },
           {
             id: "ventas_cosmetica",
-            title: "Cosmética",
-            description: "Productos y equipos cosméticos"
+            title: "💄 Cosmética", 
+            description: "Productos cosméticos"
           },
           {
             id: "volver_menu",
@@ -66,18 +71,13 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         title: "Opciones de Soporte",
         rows: [
           {
-            id: "soporte_servicio_tecnico",
-            title: "Servicio Técnico",
-            description: "Reparaciones y mantenimiento"
+            id: "soporte_servtec",
+            title: "🛠️ Servtec",
+            description: "Servicio técnico y reparaciones"
           },
           {
-            id: "soporte_pedidos_insumos",
-            title: "Pedidos de Insumos",
-            description: "Tips, consumibles, repuestos"
-          },
-          {
-            id: "soporte_hablar_agente",
-            title: "Hablar con un Agente",
+            id: "soporte_operador",
+            title: "👤 Hablar con operador",
             description: "Contacto directo con soporte"
           },
           {
@@ -114,11 +114,17 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
   // 5. Si es respuesta de lista
   if (listReplyId) {
     switch (listReplyId) {
-      case 'ventas_tecnologia_medica':
+      case 'ventas_tecnologia':
         const tecMedicaPhone = '595994750076'
-        const tecMedicaMessage = `¡Excelente elección! 🏥\n\nTe voy a conectar con nuestro equipo de Tecnología Médica.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecMedicaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
+        const tecMedicaMessage = `¡Excelente elección! 🏥\n\nTe voy a conectar con nuestro equipo de Tecnología.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecMedicaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
         await sendTextMessage(phoneNumber, tecMedicaMessage, 'ventas')
         return { message: tecMedicaMessage }
+
+      case 'ventas_insumos':
+        const insumosPhone = '595981255999'
+        const insumosMessage = `¡Perfecto! 📦\n\nTe voy a conectar con nuestro equipo de Insumos.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${insumosPhone}\n\n¡Te ayudarán con tu pedido! 😊`
+        await sendTextMessage(phoneNumber, insumosMessage, 'ventas')
+        return { message: insumosMessage }
 
       case 'ventas_cosmetica':
         const cosmeticaPhone = '595994750076'
@@ -126,21 +132,15 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         await sendTextMessage(phoneNumber, cosmeticaMessage, 'ventas')
         return { message: cosmeticaMessage }
 
-      case 'soporte_servicio_tecnico':
+      case 'soporte_servtec':
         const tecnicoPhone = '595981255999'
-        const tecnicoMessage = `¡Perfecto! 🛠️\n\nTe voy a conectar con nuestro equipo de Servicio Técnico.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecnicoPhone}\n\n¡Te ayudarán con cualquier problema técnico! 😊`
+        const tecnicoMessage = `¡Perfecto! 🛠️\n\nTe voy a conectar con nuestro equipo de Servtec.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecnicoPhone}\n\n¡Te ayudarán con cualquier problema técnico! 😊`
         await sendTextMessage(phoneNumber, tecnicoMessage, 'ventas')
         return { message: tecnicoMessage }
 
-      case 'soporte_pedidos_insumos':
-        const insumosPhone = '595981255999'
-        const insumosMessage = `¡Excelente! 📦\n\nTe voy a conectar con nuestro equipo de Pedidos de Insumos.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${insumosPhone}\n\n¡Te ayudarán con tu pedido! 😊`
-        await sendTextMessage(phoneNumber, insumosMessage, 'ventas')
-        return { message: insumosMessage }
-
-      case 'soporte_hablar_agente':
+      case 'soporte_operador':
         const agentePhone = '595981255999'
-        const agenteMessage = `¡Por supuesto! 👤\n\nTe voy a conectar con uno de nuestros agentes.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${agentePhone}\n\n¡Te atenderán enseguida! 😊`
+        const agenteMessage = `¡Por supuesto! 👤\n\nTe voy a conectar con un operador.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${agentePhone}\n\n¡Te atenderán enseguida! 😊`
         await sendTextMessage(phoneNumber, agenteMessage, 'ventas')
         return { message: agenteMessage }
 
