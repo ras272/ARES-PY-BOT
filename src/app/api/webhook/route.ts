@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseWebhookPayload } from '@/lib/whatsapp/parseWebhook'
 import { sendMainMenuFlow } from '@/lib/flows'
+import { isCourtesyMessage } from '@/lib/classifier'
 import { saveLead, saveLog, testSupabaseConnection } from '@/lib/supabase'
 
 // Variable para controlar que el test de conexión se ejecute solo una vez
@@ -49,8 +50,19 @@ export async function POST(request: NextRequest) {
         flowResponse = await defaultFlow(parsedData)
       }
     } else {
-      // Si es texto normal, siempre mostrar menú principal
-      flowResponse = await sendMainMenuFlow(parsedData)
+      // Si es texto normal, verificar si es mensaje de cortesía
+      const { messageText } = parsedData
+      
+      if (isCourtesyMessage(messageText)) {
+        // Si es mensaje de cortesía, responder amigablemente
+        const { sendTextMessage } = await import('@/lib/whatsapp/sendMessage')
+        const courtesyResponse = '¡Con gusto! 😊 Si necesitas algo más, aquí estaré para ayudarte. ¡Que tengas un excelente día! ✨'
+        await sendTextMessage(parsedData.phoneNumber, courtesyResponse, 'courtesy')
+        flowResponse = { message: courtesyResponse }
+      } else {
+        // Si no es cortesía, mostrar menú principal
+        flowResponse = await sendMainMenuFlow(parsedData)
+      }
     }
 
     // 4. Guardar lead si es necesario
