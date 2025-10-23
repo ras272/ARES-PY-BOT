@@ -89,6 +89,26 @@ export function isGreeting(message: string): boolean {
   return greetingKeywords.some(keyword => lower.includes(keyword))
 }
 
+// Función para detectar si un mensaje indica inicio de conversación o necesita ayuda
+export function isConversationStarter(message: string): boolean {
+  const lower = message.toLowerCase().trim()
+  
+  const starterKeywords = [
+    'necesito', 'ayuda', 'quiero', 'busco', 'necesitaba', 'consultar',
+    'información', 'info', 'deseo', 'me gustaría', 'quisiera',
+    'saben', 'tienen', 'hay', 'disponen', 'pueden', 'podrían'
+  ]
+
+  // Si el mensaje es corto y contiene palabras de inicio
+  if (lower.length <= 50) {
+    return starterKeywords.some(keyword => lower.includes(keyword))
+  }
+  
+  // Si empieza con estas palabras comunes de inicio
+  const startsWith = ['necesito', 'ayuda', 'quiero', 'busco', 'saben si', 'tienen']
+  return startsWith.some(start => lower.startsWith(start))
+}
+
 // Función para detectar mensajes de cortesía, agradecimiento o despedida
 export function isCourtesyMessage(message: string): boolean {
   const lower = message.toLowerCase().trim()

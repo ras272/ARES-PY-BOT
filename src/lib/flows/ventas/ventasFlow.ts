@@ -1,5 +1,5 @@
 import { ParsedWebhookData, FlowResponse } from '../../whatsapp/types'
-import { isGreeting, isCourtesyMessage, getTimeBasedGreeting, classifyIntent, extractEquipoInteres } from '../../classifier'
+import { isGreeting, isCourtesyMessage, isConversationStarter, getTimeBasedGreeting, classifyIntent, extractEquipoInteres } from '../../classifier'
 import { generateSalesResponse, detectPurchaseIntent } from '../../openai'
 import { getPdfText } from '../../pdf-loader'
 import { sendTextMessage } from '../../whatsapp/sendMessage'
@@ -14,9 +14,10 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
 
   const { messageText, buttonReplyId, listReplyId, phoneNumber, customerName } = data
 
-  // 1. Si es saludo, enviar menú inicial
-  if (isGreeting(messageText)) {
-    console.log('👋 Saludo detectado en ventas, enviando menú interactivo...')
+  // 1. Si es saludo O es iniciador de conversación, enviar menú inicial
+  if (isGreeting(messageText) || isConversationStarter(messageText)) {
+    const reason = isGreeting(messageText) ? 'Saludo' : 'Inicio de conversación'
+    console.log(`👋 ${reason} detectado en ventas, enviando menú interactivo...`)
     const saludo = getTimeBasedGreeting()
     const mensajeSaludo = customerName !== 'Cliente'
       ? `${saludo} ${customerName}! 👋`
