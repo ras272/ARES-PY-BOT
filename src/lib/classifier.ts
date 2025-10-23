@@ -23,7 +23,9 @@ export function classifyIntent(message: string): IntentType {
   const soporteKeywords = [
     'problema', 'problemas', 'ayuda', 'soporte', 'técnico', 'error',
     'falla', 'fallo', 'no funciona', 'no anda', 'reparación',
-    'mantenimiento', 'garantía', 'servicio'
+    'mantenimiento', 'garantía', 'servicio', 'daño', 'dañado', 
+    'roto', 'rompio', 'rompió', 'avería', 'averiado', 'defectuoso',
+    'averiado', 'descompuesto', 'descompuesta', 'malo', 'mala'
   ]
 
   // Contar coincidencias
