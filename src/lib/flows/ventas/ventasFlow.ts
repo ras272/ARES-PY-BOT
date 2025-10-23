@@ -172,6 +172,10 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         return await handlePostBackToMenu(phoneNumber, customerName)
     }
   }
+
+  // Fallback para cualquier caso no manejado
+  console.log('⚠️ Flujo de ventas completado sin retorno específico, mostrando menú post-acción')
+  return await handlePostBackToMenu(phoneNumber, customerName)
 }
 
 /**
