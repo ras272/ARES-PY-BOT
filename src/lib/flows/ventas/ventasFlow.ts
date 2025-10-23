@@ -115,7 +115,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
   if (listReplyId) {
     switch (listReplyId) {
       case 'ventas_tecnologia':
-        const tecMedicaPhone = '595994750076'
+        const tecMedicaPhone = '595981999887'
         const tecMedicaMessage = `¡Excelente elección! 🏥\n\nTe voy a conectar con nuestro equipo de Tecnología.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecMedicaPhone}\n\n¡Te brindarán toda la información que necesitas! 😊`
         await sendTextMessage(phoneNumber, tecMedicaMessage, 'ventas')
         return { message: tecMedicaMessage }
@@ -133,7 +133,7 @@ export async function handleVentasFlow(data: ParsedWebhookData): Promise<FlowRes
         return { message: cosmeticaMessage }
 
       case 'soporte_servtec':
-        const tecnicoPhone = '595981255999'
+        const tecnicoPhone = '595986359862'
         const tecnicoMessage = `¡Perfecto! 🛠️\n\nTe voy a conectar con nuestro equipo de Servtec.\n\n👉 Haz clic aquí para contactar:\nhttps://wa.me/${tecnicoPhone}\n\n¡Te ayudarán con cualquier problema técnico! 😊`
         await sendTextMessage(phoneNumber, tecnicoMessage, 'ventas')
         return { message: tecnicoMessage }
